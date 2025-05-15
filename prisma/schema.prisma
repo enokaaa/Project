@@ -1,0 +1,122 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql" // You can change this to sqlite, mysql, etc.
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id                      Int       @id @default(autoincrement())
+  title                   String
+  paasCode               String?
+  approvalStatusId        Int
+  approvalStatus          ApprovalStatus @relation(fields: [approvalStatusId], references: [id])
+  fundId                  Int?
+  fund                    Fund?     @relation(fields: [fundId], references: [id])
+  pagValue                Decimal?  @db.Decimal(15, 2)
+  startDate               DateTime
+  endDate                 DateTime
+  totalExpenditure        Decimal?  @db.Decimal(15, 2)
+  totalContribution       Decimal?  @db.Decimal(15, 2)
+  totalPsc                Decimal?  @db.Decimal(15, 2)
+  
+  // Relations
+  leadOrgUnitId           Int
+  leadOrgUnit             OrgUnit   @relation(fields: [leadOrgUnitId], references: [id])
+  
+  // Many-to-many relations
+  countries               ProjectCountry[]
+  themes                  ProjectTheme[]
+  donors                  ProjectDonor[]
+
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+}
+
+model Country {
+  id                      Int       @id @default(autoincrement())
+  name                    String    @unique
+  code                    String?   @unique
+  
+  // Relations
+  projects                ProjectCountry[]
+}
+
+model ProjectCountry {
+  projectId               Int
+  countryId               Int
+  
+  project                 Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  country                 Country   @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  
+  @@id([projectId, countryId])
+}
+
+model OrgUnit {
+  id                      Int       @id @default(autoincrement())
+  name                    String    @unique
+  department              String?
+  
+  // Relations
+  projects                Project[]
+}
+
+model Theme {
+  id                      Int       @id @default(autoincrement())
+  name                    String    @unique
+  description             String?
+  
+  // Relations
+  projects                ProjectTheme[]
+}
+
+model ProjectTheme {
+  projectId               Int
+  themeId                 Int
+  
+  project                 Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  theme                   Theme     @relation(fields: [themeId], references: [id], onDelete: Cascade)
+  
+  @@id([projectId, themeId])
+}
+
+model Donor {
+  id                      Int       @id @default(autoincrement())
+  name                    String    @unique
+  
+  // Relations
+  projects                ProjectDonor[]
+}
+
+model ProjectDonor {
+  projectId               Int
+  donorId                 Int
+  
+  project                 Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  donor                   Donor     @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  
+  @@id([projectId, donorId])
+}
+
+model ApprovalStatus {
+  id                      Int       @id @default(autoincrement())
+  name                    String    @unique
+  description             String?
+  
+  // Relations
+  projects                Project[]
+}
+
+model Fund {
+  id                      Int       @id @default(autoincrement())
+  name                    String    @unique
+  code                    String?   @unique
+  
+  // Relations
+  projects                Project[]
+}
